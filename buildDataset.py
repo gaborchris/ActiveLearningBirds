@@ -83,5 +83,5 @@ class DatasetBuilder:
 if __name__ == "__main__":
     builder = DatasetBuilder()
     # dir_map = builder.random_downsample(140, 0.1)
-    builder.create_new_dataset('full_data',0, 1)
+    builder.create_new_dataset('one_percent',200, 0.01)
 

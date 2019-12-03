@@ -1,14 +1,8 @@
-import tarfile
-# import tensorflow as tf
-# print( tf.constant('Hello from TensorFlow ' + tf.__version__) )
-import pathlib
+import tensorflow as tf
+print( tf.constant('Hello from TensorFlow ' + tf.__version__) )
 import os
 import matplotlib.pyplot as plt
-import math
-import numpy as np
-import time
-import random
-import shutil
+import json
 
 
 def download_data(origin='http://www.vision.caltech.edu/visipedia-data/CUB-200-2011/CUB_200_2011.tgz'):
@@ -16,27 +10,22 @@ def download_data(origin='http://www.vision.caltech.edu/visipedia-data/CUB-200-2
     return data_dir
 
 
-class DataHandler:
+def get_flow_generator(path, dataset_name, target_size, batch_size):
+    dataset_path = os.path.join(path, dataset_name)
+    image_data = os.path.join(dataset_path, 'images')
+    image_gen = tf.keras.preprocessing.image.ImageDataGenerator(rescale=1/255.)
+    image_gen = image_gen.flow_from_directory(image_data, target_size=target_size, batch_size=batch_size, class_mode='sparse')
+    return image_gen
 
-    def __init__(self, data_path = "C:/Users/Home/.keras/datasets", dataset='CUB_200_2011', target_size=(28, 28), batch_size=32):
-        self.data_dir = data_path
-        self.dataset_path = os.path.join(pathlib.Path(self.data_dir).parents[0], dataset)
-        self.image_data = os.path.join(self.dataset_path, 'images')
-        self.target_size = target_size
-        self.batch_size = batch_size
-        self.flow_gen = self._set_flow_generator()
 
-    def _set_flow_generator(self):
-        image_gen = tf.keras.preprocessing.image.ImageDataGenerator(rescale=1/255.)
-        image_gen = image_gen.flow_from_directory(self.image_data, target_size=self.target_size,
-                                                  batch_size=self.batch_size, class_mode='sparse')
-        return image_gen
-
-    def get_flow_generator(self):
-        return self.flow_gen
-
-    def get_class_mapping(self):
-        pass
+def parse_json_classes(path, dataset, fname):
+    dataset_path = os.path.join(path, dataset)
+    with open(os.path.join(dataset_path, fname)) as f:
+        parsed = json.load(f)
+    mapping = {}
+    for k, v in parsed.items():
+        mapping[int(k)] = v
+    return mapping
 
 
 ### define model
@@ -59,26 +48,27 @@ class DataHandler:
 
 
 if __name__ == "__main__":
-    builder = DatasetBuilder()
-    builder.create_new_dataset("downsample")
-    # print(builder.get_base_class_counts())
-    # builder.random_downsample(10)
+    path = "C:/Users/Home/.keras/datasets/"
+    dataset_name = 'one_percent'
 
-    # dh = DataHandler(batch_size=256)
-    # image_generator = dh.get_flow_generator()
-    # class_names = dh.get_class_mapping()
+    im_gen = get_flow_generator(path=path, dataset_name=dataset_name, batch_size=32, target_size=(224, 224))
+
+    class_names = parse_json_classes(path, dataset_name, 'class_mapping.json')
+    class_counts = parse_json_classes(path, dataset_name, 'class_counts.json')
+    print(class_counts)
+
     # print(class_names)
     # print(dh.get_path_map())
-    # for batch in image_generator:
-    #     image, labels = batch
-    #     break
-    #
-    # for i in range(9):
-    #     plt.subplot(3, 3, i+1)
-    #     plt.imshow(image[i])
-    #     plt.xlabel(class_names[labels[i]])
-    # plt.tight_layout()
-    # plt.show()
-    # plt.close()
+    for batch in im_gen:
+        image, labels = batch
+        break
+
+    for i in range(9):
+        plt.subplot(3, 3, i+1)
+        plt.imshow(image[i])
+        plt.xlabel(class_names[labels[i]])
+    plt.tight_layout()
+    plt.show()
+    plt.close()
 
 
