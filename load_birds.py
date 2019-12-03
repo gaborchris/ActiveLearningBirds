@@ -10,11 +10,11 @@ def download_data(origin='http://www.vision.caltech.edu/visipedia-data/CUB-200-2
     return data_dir
 
 
-def get_flow_generator(path, dataset_name, target_size, batch_size):
+def get_flow_generator(path, dataset_name, target_size, batch_size, mode='sparse'):
     dataset_path = os.path.join(path, dataset_name)
     image_data = os.path.join(dataset_path, 'images')
     image_gen = tf.keras.preprocessing.image.ImageDataGenerator(rescale=1/255.)
-    image_gen = image_gen.flow_from_directory(image_data, target_size=target_size, batch_size=batch_size, class_mode='sparse')
+    image_gen = image_gen.flow_from_directory(image_data, target_size=target_size, batch_size=batch_size, class_mode=mode)
     return image_gen
 
 

@@ -11,6 +11,8 @@ import random
 import shutil
 import json
 
+DATA_ROOT = "C:/Users/Home/.keras/datasets/"
+
 
 def get_dir_mapping(path):
     dirs = sorted([name for name in os.listdir(path) if os.path.isdir(os.path.join(path, name))])
