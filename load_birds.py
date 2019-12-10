@@ -48,7 +48,8 @@ def parse_json_classes(path, dataset, fname):
 
 
 if __name__ == "__main__":
-    path = "C:/Users/Home/.keras/datasets/"
+    # download_data()
+    path = "/home/christian/.keras/datasets"
     dataset_name = 'one_percent'
 
     im_gen = get_flow_generator(path=path, dataset_name=dataset_name, batch_size=32, target_size=(224, 224))

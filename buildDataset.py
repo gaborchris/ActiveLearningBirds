@@ -11,7 +11,7 @@ import random
 import shutil
 import json
 
-DATA_ROOT = "C:/Users/Home/.keras/datasets/"
+DATA_ROOT = "/home/christian/.keras/datasets/"
 
 
 def get_dir_mapping(path):
@@ -40,7 +40,7 @@ def get_class_counts(dir_map):
 
 class DatasetBuilder:
 
-    def __init__(self, dataset_dir="C:/Users/Home/.keras/datasets/", base_dir="CUB_200_2011"):
+    def __init__(self, dataset_dir=DATA_ROOT, base_dir="CUB_200_2011"):
         self.dataset_dir = dataset_dir
         self.base_dir = os.path.join(self.dataset_dir, base_dir)
         self.image_dir = os.path.join(self.base_dir, 'images')
@@ -64,11 +64,48 @@ class DatasetBuilder:
             new_set[k] = v
         return new_set
 
-    def create_new_dataset(self, target, num_downsample=200, ratio=0.05):
+    def random_downsample_range(self, start_idx, ratio):
+        dir_map = get_dir_mapping(self.image_dir)
+        new_set = {}
+        targets = list(dir_map)[start_idx:]
+        for k, v in dir_map.items():
+            if k in targets:
+                count = len(v)
+                sample_size = math.ceil(ratio*count)
+                v = random.sample(v, sample_size)
+            new_set[k] = v
+        return new_set
+
+    def train_test_split(self, ratio=0.2):
+        dir_map = get_dir_mapping(self.image_dir)
+        train_set = {}
+        test_set = {}
+        for k, v in dir_map.items():
+            count = len(v)
+            split = math.ceil(ratio*count)
+            random.shuffle(v)
+            test = v[:split]
+            train = v[split:]
+            train_set[k] = train
+            test_set[k] = test
+        return train_set, test_set
+
+    def random_downsample_map_range(self, mapping, start_idx, ratio):
+        new_set= {}
+        targets = list(mapping)[start_idx:]
+        for k, v in mapping.items():
+            if k in targets:
+                count = len(v)
+                split = math.ceil(ratio*count)
+                v = v[:split]
+            new_set[k]= v
+        return new_set
+
+
+    def create_new_dataset(self, target, mapping):
         new_data_path = os.path.join(self.dataset_dir, target)
         new_image_path = os.path.join(new_data_path, 'images')
-        new_dataset = self.random_downsample(num_downsample, ratio)
-        for k, v in new_dataset.items():
+        for k, v in mapping.items():
             print("Creating dir: ", k)
             for path in v:
                 source = os.path.join(self.image_dir, path)
@@ -84,6 +121,18 @@ class DatasetBuilder:
 
 if __name__ == "__main__":
     builder = DatasetBuilder()
+    train_map, test_map = builder.train_test_split(0.2)
+    down_sample = builder.random_downsample_map_range(train_map, 100, 0.1)
+
+    # Test dataset
+    builder.create_new_dataset('bird_test_data', test_map)
+    # Train dataset full
+    builder.create_new_dataset('bird_train_full', train_map)
+    # Train dataset downsampled
+    builder.create_new_dataset('bird_train_sampled', down_sample)
+
+    # builder.create_new_dataset('top_half_tenth', 'idx', 100, 0.1)
     # dir_map = builder.random_downsample(140, 0.1)
-    builder.create_new_dataset('one_percent',200, 0.01)
+    # builder.create_new_dataset('one_percent',200, 0.01)
+    # builder.create_new_dataset('full_data',200, 1.0)
 

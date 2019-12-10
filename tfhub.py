@@ -4,6 +4,12 @@ import ipykernel
 import numpy as np
 import PIL.Image as Image
 import matplotlib.pyplot as plt
+from tensorflow.compat.v1 import ConfigProto
+from tensorflow.compat.v1 import InteractiveSession
+
+config = ConfigProto()
+config.gpu_options.allow_growth = True
+session = InteractiveSession(config=config)
 
 
 IMAGE_SHAPE = (224, 224)
@@ -97,7 +103,7 @@ def get_mobilenet_feature_extractor():
 
 def transfer_learn(data_root, base=None):
     image_generator = tf.keras.preprocessing.image.ImageDataGenerator(rescale=1./255)
-    image_data = image_generator.flow_from_directory(str(data_root), target_size=IMAGE_SHAPE, batch_size=4)
+    image_data = image_generator.flow_from_directory(str(data_root), target_size=IMAGE_SHAPE, batch_size=2)
     print(image_data.batch_size)
     for image_batch, label_batch in image_data:
         break
