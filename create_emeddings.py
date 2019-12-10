@@ -114,4 +114,6 @@ if __name__ == "__main__":
     # get_embeddings(load_flowers(), get_mobilenet_feature_extractor())
     # get_embeddings(load_birds(), get_mobilenet_feature_extractor(), 'full_bird_data')
     # get_embeddings(load_birds(dataset='top_half_tenth'), get_mobilenet_feature_extractor(), 'half_tenth')
-    create_train_test('half_tenth', train_split=0.8)
+    get_embeddings(load_birds(dataset='bird_train_full'), get_mobilenet_feature_extractor(), 'train_full')
+    get_embeddings(load_birds(dataset='bird_train_sampled'), get_mobilenet_feature_extractor(), 'train_sampled')
+    # create_train_test('full_train', train_split=0.8)

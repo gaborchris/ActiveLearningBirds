@@ -23,7 +23,7 @@ def load_train_embed(path):
     return train_x, train_y, names
 
 
-def get_metrics(y_true, y_pred, idx=None):
+def get_metrics(y_true, y_pred, idx=None, verbose=True):
     confusion = tf.math.confusion_matrix(labels=y_true, predictions=y_pred)
     accuracy = np.sum(np.diag(confusion)) / np.sum(confusion)
     correct = np.diag(confusion)
@@ -39,9 +39,10 @@ def get_metrics(y_true, y_pred, idx=None):
     if idx is not None:
         recall = recall[idx[0]: idx[1]]
         precision = precision[idx[0]: idx[1]]
-    print("Accuracy:", accuracy)
-    print("Average Recall:", np.average(recall))
-    print("Average Precision:", np.average(precision))
+    if verbose:
+        print("Accuracy:", accuracy)
+        print("Average Recall:", np.average(recall))
+        print("Average Precision:", np.average(precision))
     return accuracy, recall, precision
 
 
@@ -79,9 +80,11 @@ def get_datasets(path='./embeddings/half_tenth_train.npz', train_split=0.8):
     x, y, sources = load_train_embed(path)
     x = x.astype('float32')
     y = y.astype('float32')
+    p = np.random.permutation(len(x))
+    x_shuffle, y_shuffle, = x[p], y[p]
     train_split = int(x.shape[0]*train_split)
-    x_train, y_train = x[:train_split], y[:train_split]
-    x_val, y_val = x[train_split:], y[train_split:]
+    x_train, y_train = x_shuffle[:train_split], y_shuffle[:train_split]
+    x_val, y_val = x_shuffle[train_split:], y_shuffle[train_split:]
     train_rares = get_rare_split(y_train, 0.5)
     val_rares = get_rare_split(y_val, 0.5)
     return x_train, y_train, x_val, y_val, train_rares, val_rares
@@ -110,19 +113,66 @@ def train_model(model, x_train, y_train, x_val, y_val, class_weight, epochs=30, 
     return model
 
 
+def get_top(y_pred, n=5):
+    return np.argsort(y_pred)[:, -n:]
+
+
+def top_corrected(y_top, y_true):
+    scarce_preds = np.zeros((y_true.shape))
+    for i, (x, y) in enumerate(zip(y_top, y_true)):
+        if y in x:
+            scarce_preds[i] = y
+        else:
+            scarce_preds[i] = x[-1]
+    print(scarce_preds)
+    return scarce_preds
+
+
+def plot_recall(recall):
+    plt.plot(recall)
+    plt.show()
+    plt.close()
+
+
 if __name__ == "__main__":
-    x_train, y_train, x_val, y_val, t_rare, v_rare = get_datasets('./embeddings/half_tenth_train.npz')
+    x_train, y_train, x_val, y_val, t_rare, v_rare = get_datasets('./embeddings/train_sampled.npz')
     class_weights = get_class_weight(y_train)
     model = create_model()
     model = train_model(model, x_train, y_train, x_val, y_val, class_weight=class_weights)
-    model = train_model(model, x_train[t_rare], y_train[t_rare], x_val[v_rare], y_val[v_rare], class_weight=class_weights, epochs=100)
+
+
     y_pred = model.predict(x_val, verbose=False)
-    y_pred = np.argmax(y_pred, axis=1)
+    y_pred_sparse = np.argmax(y_pred, axis=1)
     y_true = np.argmax(y_val, axis=1)
-    get_metrics(y_true=y_true, y_pred=y_pred)
-    plot_confusion(y_true=y_true, y_pred=y_pred)
+    print(y_true.shape)
+    top5 = get_top(y_pred, 5)
+    top5_pred_corrected = top_corrected(top5, y_true)
+    print(top5_pred_corrected.shape)
 
-    get_metrics(y_true=y_true[v_rare], y_pred=y_pred[v_rare], idx=[100, 200])
-    plot_confusion(y_true=y_true[v_rare], y_pred=y_pred[v_rare], idx=[100, 200])
+    # x_full, y_full, _, _, _, _ = get_datasets('./embeddings/train_full.npz', train_split=1.0)
+    # y_pred = model.predict(x_full, verbose=False)
+    # y_pred_sparse = np.argmax(y_pred, axis=1)
+    # y_true = np.argmax(y_full, axis=1)
+    # print(y_true.shape)
+    # top5 = get_top(y_pred, 5)
+    # top5_pred_corrected = top_corrected(top5, y_true)
+    # print(top5_pred_corrected.shape)
+
+    acc1, recall1, precision1 = get_metrics(y_true=y_true, y_pred=y_pred_sparse, verbose=False)
+    acc5, recall5, precision5 = get_metrics(y_true=y_true, y_pred=top5_pred_corrected, verbose=False)
+    # plot_recall(recall5)
+    # plot_recall(precision5)
+    # plot_recall(recall1)
+    # plot_recall(precision1)
+    # print(recall5)
+    print(acc1)
+    print(acc5)
+    # plot_confusion(y_true=y_true, y_pred=top5_pred_corrected)
+    # plot_confusion(y_true=y_true, y_pred=y_pred_sparse)
+    # plot_confusion(y_true=y_true[v_rare], y_pred=top5_pred_corrected[v_rare], idx=[100, 200])
+
+    # acc, recall, precision = get_metrics(y_true=y_true[v_rare], y_pred=y_pred[v_rare], idx=[100, 200])
+    # plot_confusion(y_true=y_true[v_rare], y_pred=y_pred[v_rare], idx=[100, 200])
 
 
+    # model = train_model(model, x_train[t_rare], y_train[t_rare], x_val[v_rare], y_val[v_rare], class_weight=class_weights, epochs=100)
