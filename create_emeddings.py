@@ -87,6 +87,7 @@ def create_train_test(name, train_split):
     np.savez('./embeddings/'+name+'_test', x_test, y_test, sources_test)
 
 
+
 def save_embed_to_seperate_files(data_root, base):
     pass
     # for i in range(image_data.samples):
@@ -114,6 +115,6 @@ if __name__ == "__main__":
     # get_embeddings(load_flowers(), get_mobilenet_feature_extractor())
     # get_embeddings(load_birds(), get_mobilenet_feature_extractor(), 'full_bird_data')
     # get_embeddings(load_birds(dataset='top_half_tenth'), get_mobilenet_feature_extractor(), 'half_tenth')
-    get_embeddings(load_birds(dataset='bird_train_full'), get_mobilenet_feature_extractor(), 'train_full')
-    get_embeddings(load_birds(dataset='bird_train_sampled'), get_mobilenet_feature_extractor(), 'train_sampled')
-    # create_train_test('full_train', train_split=0.8)
+    # get_embeddings(load_birds(dataset='bird_train_full'), get_mobilenet_feature_extractor(), 'train_full')
+    # get_embeddings(load_birds(dataset='bird_train_sampled'), get_mobilenet_feature_extractor(), 'train_sampled')
+    get_embeddings(load_birds(dataset='bird_test_data'), get_mobilenet_feature_extractor(), 'test')

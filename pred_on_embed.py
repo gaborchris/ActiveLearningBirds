@@ -124,7 +124,6 @@ def top_corrected(y_top, y_true):
             scarce_preds[i] = y
         else:
             scarce_preds[i] = x[-1]
-    print(scarce_preds)
     return scarce_preds
 
 
@@ -134,23 +133,24 @@ def plot_recall(recall):
     plt.close()
 
 
-if __name__ == "__main__":
-    x_train, y_train, x_val, y_val, t_rare, v_rare = get_datasets('./embeddings/train_sampled.npz')
+
+def train_and_evaluate(data_path, top_k=5):
+    x_train, y_train, x_val, y_val, t_rare, v_rare = get_datasets(data_path)
     class_weights = get_class_weight(y_train)
     model = create_model()
     model = train_model(model, x_train, y_train, x_val, y_val, class_weight=class_weights)
 
-
     y_pred = model.predict(x_val, verbose=False)
     y_pred_sparse = np.argmax(y_pred, axis=1)
     y_true = np.argmax(y_val, axis=1)
-    print(y_true.shape)
-    top5 = get_top(y_pred, 5)
-    top5_pred_corrected = top_corrected(top5, y_true)
-    print(top5_pred_corrected.shape)
+    top_k_preds = get_top(y_pred, top_k)
+    top_k_pred_corrected = top_corrected(top_k, y_true)
 
-    # x_full, y_full, _, _, _, _ = get_datasets('./embeddings/train_full.npz', train_split=1.0)
-    # y_pred = model.predict(x_full, verbose=False)
+
+if __name__ == "__main__":
+    train_and_evaluate('./embeddings/train_full.npz')
+
+
     # y_pred_sparse = np.argmax(y_pred, axis=1)
     # y_true = np.argmax(y_full, axis=1)
     # print(y_true.shape)
@@ -158,15 +158,15 @@ if __name__ == "__main__":
     # top5_pred_corrected = top_corrected(top5, y_true)
     # print(top5_pred_corrected.shape)
 
-    acc1, recall1, precision1 = get_metrics(y_true=y_true, y_pred=y_pred_sparse, verbose=False)
-    acc5, recall5, precision5 = get_metrics(y_true=y_true, y_pred=top5_pred_corrected, verbose=False)
+    # acc1, recall1, precision1 = get_metrics(y_true=y_true, y_pred=y_pred_sparse, verbose=False)
+    # acc5, recall5, precision5 = get_metrics(y_true=y_true, y_pred=top5_pred_corrected, verbose=False)
     # plot_recall(recall5)
     # plot_recall(precision5)
     # plot_recall(recall1)
     # plot_recall(precision1)
     # print(recall5)
-    print(acc1)
-    print(acc5)
+    # print(acc1)
+    # print(acc5)
     # plot_confusion(y_true=y_true, y_pred=top5_pred_corrected)
     # plot_confusion(y_true=y_true, y_pred=y_pred_sparse)
     # plot_confusion(y_true=y_true[v_rare], y_pred=top5_pred_corrected[v_rare], idx=[100, 200])
