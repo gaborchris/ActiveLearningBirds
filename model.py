@@ -53,6 +53,11 @@ class Model:
             self.model.fit(x=x_train, y=y_train, class_weight=self.class_weights,
                            epochs=epochs, verbose=verbose)
 
-
     def predict(self, x, verbose=True):
         return self.model.predict(x, verbose=verbose)
+
+    def save(self, path, save_format='tf'):
+        self.model.save(path) #, save_format=save_format)
+
+    def load(self, path):
+        self.model = tf.keras.models.load_model(path)

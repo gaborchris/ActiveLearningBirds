@@ -20,18 +20,26 @@ class DataLoader:
 
     def __init__(self, train_path, pool_path, test_path):
         self.x_train, self.y_train = shuffle_data(load_data(train_path))
+        self.x_train_default = self.x_train
+        self.y_train_default = self.y_train
         self.x_pool, self.y_pool = load_data(pool_path)
         self.x_test, self.y_test = load_data(test_path)
 
     def append_train_from_pool(self, idx):
         new_x = np.expand_dims(self.x_pool[idx], axis=0)
         new_y = np.expand_dims(self.y_pool[idx], axis=0)
-        # shuffle into dataset
+        print("Appending idx", idx, "with label", np.argmax(new_y))
         self.x_train = np.append(self.x_train, new_x, axis=0)
         self.y_train = np.append(self.y_train, new_y, axis=0)
         self.x_train, self.y_train = shuffle_data((self.x_train, self.y_train))
 
+    def reset_train_set(self):
+        self.x_train = self.x_train_default
+        self.y_train = self.y_train_default
 
+    def fill_train_set(self):
+        self.x_train = self.x_pool
+        self.y_train = self.y_pool
 
 
 if __name__ == "__main__":
